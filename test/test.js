@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 
 var pigeon = require('../index');
-var parse = require('../lib/pigeon-parser').parseAttrString;
+var parse = require('../lib/pigeon-parser');
 
 describe('build', function() {
 
@@ -9,7 +9,7 @@ describe('build', function() {
 
     var data = 'ABCD';
 
-    pigeon(data, function(err, html) {
+    pigeon.render(data, function(err, html) {
       expect(err).to.exist;
       expect(html).to.be.null;
       done();
@@ -31,13 +31,11 @@ describe('build', function() {
 
     };
 
-    pigeon(data, function(err, html) {
+    pigeon.render(data, function(err, html) {
       expect(err).to.be.null;
       expect(html).to.exist;
       expect(html).to.equal('<body><div  class="class"><div  class="child"><div  class="finalchild">Content</div></div></div></body>');
       done();
-    }, {
-      minify: true
     });
 
   });
@@ -54,13 +52,11 @@ describe('build', function() {
       }],
     };
 
-    pigeon(data, function(err, html) {
+    pigeon.render(data, function(err, html) {
       expect(err).to.be.null;
       expect(html).to.exist;
       expect(html).to.equal('<div  class="class"><div  class="child">Content</div><div  class="child">Content</div><div  class="child">Content</div></div>');
       done();
-    }, {
-      minify: true
     });
 
   });
@@ -75,15 +71,18 @@ describe('build', function() {
 
     };
 
-    pigeon(data, function(err, html) {
+    pigeon.render(data, function(err, html) {
       expect(err).to.be.null;
       expect(html).to.exist;
       expect(html).to.equal('<p>Something</p>');
       done();
-    }, {
-      minify: true
     });
   });
+  
+  /**
+   * TODO:
+   * Add more tests with YAML
+   */
 
 });
 

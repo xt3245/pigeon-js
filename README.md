@@ -42,7 +42,7 @@ var convert = {
 
 };
 
-pigeon(convert, function(err, html) {
+pigeon.render(convert, function(err, html) {
     console.log(html);
 });
 ```
@@ -79,9 +79,70 @@ pigeon(convert, function(err, html) {
 
 ```
 
+# Usage: YAML 
+
+Template file:
+
+```yaml
+
+_: 'html'
+html:
+  head: 
+    script[src=""]: ''
+    title: 'My title'
+  body:
+    '.class#id': '{{content}}'
+    .anotherclass: 
+      - .class: 'Content'
+      - .anotherclass: '{{name}} is {{age}} today!'
+      - .lastclass: 'Content'
+    footer.footer:
+      span: 
+        a[href="/signup"]: 'Sign up'
+```
+
+Javascript:
+
+``` javascript
+
+var pigeon = require('pigeon');
+
+var data = {content: 'Content', name: 'John', age: '20'};
+
+var html = pigeon.renderFromYAML('/home/user/path/to/template.yml', {data: data});
+
+console.log(html);
+
+```
+
+### Displays 
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="/somewhereovertherainbow.js"></script>
+  <title>My title</title>
+</head>
+
+<body>
+  <div id="id" class="class">Content</div>
+  <div class="anotherclass">
+    <div class="class">Content</div>
+    <div class="anotherclass">John is 20 today!</div>
+    <div class="lastclass">Content</div>
+  </div>
+  <footer class="footer"><span><a  href="/signup">Sign up</a></span></footer>
+</body>
+
+</html>
+
+```
+
 # Todo
 
-- [ ] Support for YAML (Cleaner syntax, no quotation marks and braces)
+- [x] Support for YAML (Cleaner syntax, no quotation marks and braces)
 
 - [x] Support same properties
 

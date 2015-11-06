@@ -1,25 +1,152 @@
+'use strict';
+
+/**
+ * Pigeon JS
+ * Dependencies 
+ */
+
+var fs = require('fs');
+var path = require('path');
+var jsyaml = require('js-yaml');
 var pigeon = require('./lib/pigeon');
-var beautifyHTML = require('js-beautify').html;
+var template = require('./lib/pigeon-template');
 
-module.exports = function(obj, callback, options) {
+/**
+ * Version 
+ * @api public
+ */
 
-  var callback = callback || function() {};
+exports.version = '0.2.0';
+
+/**
+ * Cache stores strings of html
+ * So an object doesn't need to be "compiled", every single time
+ * @api public
+ */
+
+exports.cache = {};
+
+/**
+ * Stores vars, and function for later use. 
+ * @api public
+ */
+
+exports.storage = {};
+
+/**
+ * Compiles an object to html
+ * @param {Object} obj
+ * @return {String}
+ * @api private 
+ */
+
+function compile(obj) {
+  return pigeon.build(obj);
+}
+
+/**
+ * Handles all options before returning the html string
+ * 
+ * @param {String} html 
+ * @param {Object} options
+ * @return {String}
+ * @api private
+ */
+
+function handle(obj, options) {
+  
+  if (options.cache && exports.cache[key]) {
+    return exports.cache[key];
+  }
+  
+  var html = compile(obj);
+  
+  if (!options.cache) {
+    return html;
+  }
+  
+  var key = options.name;
+  
+  if (options.cache && !exports.cache[key]) {
+    exports.cache[key] = html;
+    return exports.cache[key];
+  }
+  
+}
+
+/**
+ * @param {String} path
+ * @param {Object|Function} Object
+ * @return {String} 
+ * @api public
+ */
+
+exports.renderFromYAML = function(path, options, callback) {
+  
+  if (typeof options === 'function') {
+    var callback = options;
+    var options = undefined;
+  }
+  
   var options = options || {};
-
-  if (obj !== null && typeof obj !== 'object') {
-    var error = new TypeError('Expected an object.');
-    return callback(error, null);
+  options.name = path;
+  
+  var callback = (typeof callback === 'function') ? callback : function() {};
+  
+  try {
+    var obj = jsyaml.safeLoad(fs.readFileSync(path, 'utf8'));
+    var html = handle(obj, options);
+    
+    if (options.data) {
+      html = template(html, options.data);
+    }
+    
+    callback(null, html);
+    return html;
+    
+  } catch (e) {
+    return callback(e, null);
   }
+  
+};
 
-  var html = pigeon.build(obj);
+/**
+ * @param {Object} obj
+ * @param (Object|Function} options
+ * @return {String}
+ * @api public
+ */
 
-  if (!options.minify) {
-    html = beautifyHTML(html, {
-      indent_size: options.indentSize || 4
-    });
+exports.render = function(obj, options, callback) {
+  
+  if (typeof options === 'function') {
+    var callback = options;
+    var options = undefined;
   }
+  
+  var options = options || {};
+  var callback = (typeof callback === 'function') ? callback : function() {};
+  
+  options.cache = (options.cache && options.name) ? true : false;
+  
+  if (obj !== null && typeof obj === 'object') {
+    var html = handle(obj, options);
+    callback(null, html);
+    return html;
+  } else {
+    var e = new TypeError('Expected an object');
+    return callback(e, null);
+  }
+  
+};
 
-  callback(null, html);
-  return html;
+/**
+ * @return {Boolean} 
+ * @api public
+ */
 
+exports.flush = function() {
+  exports.cache = {};
+  exports.storage = {};
+  return true;
 };
